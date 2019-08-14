@@ -1,0 +1,67 @@
+#include <Arduino.h>
+// constants won't change. Used here to set a pin number:
+#include <NewPing.h>
+#define TRIGGER_PIN  A4  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     A5  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 400 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+int average_distance =0 ;
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
+const byte BUTTON = 2 ;
+const byte LED = 13;
+
+unsigned long buttonPushedMillis;
+unsigned long ScanTurnedOnAt;
+unsigned long ScanTurnOnDelay = 2500;
+unsigned long ScanTurnOffDelay = 3000;
+bool ledReady = false;
+bool ledState = false;a
+
+void setup(){
+  Serial.begin(9600);
+  Serial.print("STARTED");
+pinMode (BUTTON, INPUT_PULLUP);
+pinMode(LED, OUTPUT);
+digitalWrite(LED,LOW);
+
+}
+
+void loop(/* arguments */) {
+  /* code */
+unsigned long currentMillis = millis();
+if (digitalRead(BUTTON) == LOW){
+  buttonPushedMillis = currentMillis;
+  Serial.println("Button was Pressed");
+  ledReady = true;
+}
+  if (ledReady){
+    if((unsigned long) (currentMillis - buttonPushedMillis) >= ScanTurnOnDelay){
+      digitalWrite(LED,HIGH);
+      Serial.println("Scan STARTED...");
+      ledState = true;
+      ScanTurnedOnAt = currentMillis;
+      ledReady = false;
+      average_distance =0;
+for (int Sens_count = 0; Sens_count <4; Sens_count ++){
+      Serial.println("");
+      Serial.print(sonar.ping_cm()); // Send ping, get distance in cm and print result (0 = outside set distance range)
+      Serial.print("cm");
+    //average_distance += sonar.ping_cm();
+    ///  Serial.print("");
+    //  Serial.println("Average_distance is:");
+//Serial.print(average_distance);
+
+delay(50);
+}
+    }
+  }
+  if (ledState){
+    if ((unsigned long)(currentMillis - ScanTurnedOnAt) >= ScanTurnOffDelay){
+      ledState = false;
+      digitalWrite(LED,LOW);
+      Serial.println("");
+      Serial.println("END of SCAN");
+    }
+  }
+}
+
